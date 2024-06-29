@@ -201,6 +201,7 @@ module.exports = {
 	ignorePatterns: [
 		'packages/*/types/index.d.ts',
 		'packages/*/types/index.d.ts.map',
-		'packages/*/CHANGELOG.md'
+		'packages/*/CHANGELOG.md',
+		'packages/playground/treeshaking/compare/*'
 	]
 };

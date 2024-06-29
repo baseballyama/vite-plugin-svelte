@@ -172,6 +172,13 @@ interface ExperimentalOptions {
 	disableSvelteResolveWarnings?: boolean;
 
 	compileModule?: CompileModuleOptions;
+
+	/**
+	 * Enable component-level tree shaking.
+	 * If true, the plugin performs dead code elimination (DCE) on Svelte components.
+	 * WARNING: This process traverses entire files, significantly increasing build time.
+	 */
+	componentLevelTreeShaking?: boolean;
 }
 
 interface CompileModuleOptions {
