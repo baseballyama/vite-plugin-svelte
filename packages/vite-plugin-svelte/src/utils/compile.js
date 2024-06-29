@@ -9,6 +9,7 @@ import {
 } from './preprocess.js';
 import { mapToRelative } from './sourcemaps.js';
 import { enhanceCompileError } from './error.js';
+import { treeShakeSvelteComponent } from './tree-shaking/phase2.js';
 
 // TODO this is a patched version of https://github.com/sveltejs/vite-plugin-svelte/pull/796/files#diff-3bce0b33034aad4b35ca094893671f7e7ddf4d27254ae7b9b0f912027a001b15R10
 // which is closer to the other regexes in at least not falling into commented script
@@ -24,7 +25,7 @@ export function createCompileSvelte() {
 	let stats;
 	const devStylePreprocessor = createInjectScopeEverythingRulePreprocessorGroup();
 	/** @type {import('../types/compile.d.ts').CompileSvelte} */
-	return async function compileSvelte(svelteRequest, code, options) {
+	return async function compileSvelte(svelteRequest, code, options, id, propsUsage) {
 		const { filename, normalizedFilename, cssId, ssr, raw } = svelteRequest;
 		const { emitCss = true } = options;
 		/** @type {string[]} */
@@ -103,13 +104,20 @@ export function createCompileSvelte() {
 		if (typeof preprocessed?.map === 'object') {
 			mapToRelative(preprocessed?.map, filename);
 		}
+
+		let finalCode = preprocessed ? preprocessed.code : code;
+
+		if (options.experimental?.componentLevelTreeShaking) {
+			finalCode = treeShakeSvelteComponent(finalCode, propsUsage);
+		}
+
 		if (raw && svelteRequest.query.type === 'preprocessed') {
 			// @ts-expect-error shortcut
 			return /** @type {import('../types/compile.d.ts').CompileData} */ {
 				preprocessed: preprocessed ?? { code }
 			};
 		}
-		const finalCode = preprocessed ? preprocessed.code : code;
+
 		const dynamicCompileOptions = await options?.dynamicCompileOptions?.({
 			filename,
 			code: finalCode,

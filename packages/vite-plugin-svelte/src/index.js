@@ -17,6 +17,10 @@ import { saveSvelteMetadata } from './utils/optimizer.js';
 import { VitePluginSvelteCache } from './utils/vite-plugin-svelte-cache.js';
 import { loadRaw } from './utils/load-raw.js';
 import * as svelteCompiler from 'svelte/compiler';
+import * as constants from './constants.js';
+import { rollup } from 'rollup';
+import { createTreeShakePreprocess } from './utils/tree-shaking/phase1.js';
+import { DYNAMIC } from './utils/tree-shaking/shared.js';
 
 /**
  * @param {Partial<import('./public.d.ts').Options>} [inlineOptions]
@@ -37,15 +41,23 @@ export function svelte(inlineOptions) {
 	let options;
 	/** @type {import('vite').ResolvedConfig} */
 	let viteConfig;
+	/** @type {import('./types/tree-shaking.js').TreeShakePreprocess} */
+	let treeShakePreprocess;
 	/** @type {import('./types/compile.d.ts').CompileSvelte} */
 	let compileSvelte;
 	/* eslint-enable no-unused-vars */
 	/** @type {import('./types/plugin-api.d.ts').PluginAPI} */
 	const api = {};
+	/** @type {Record<import('./types/tree-shaking.js').ComponentId, import('./types/tree-shaking.js').Props[]>} */
+	const propsByComponentId = {};
+	/** @type {'tree-shake-traverser' | 'main' | undefined} */
+	let buildPhase;
+	/** @type {string[]} */
+	const svelteFileIds = [];
 	/** @type {import('vite').Plugin[]} */
 	const plugins = [
 		{
-			name: 'vite-plugin-svelte',
+			name: constants.PLUGIN_NAME_VPS,
 			// make sure our resolver runs before vite internal resolver to resolve svelte field correctly
 			enforce: 'pre',
 			api,
@@ -69,13 +81,28 @@ export function svelte(inlineOptions) {
 				patchResolvedViteConfig(config, options);
 				requestParser = buildIdParser(options);
 				compileSvelte = createCompileSvelte();
+				treeShakePreprocess = createTreeShakePreprocess();
 				viteConfig = config;
 				// TODO deep clone to avoid mutability from outside?
 				api.options = options;
 				log.debug('resolved options', options, 'config');
 			},
 
-			async buildStart() {
+			async buildStart(rollupOptions) {
+				if (viteConfig.isProduction && options.experimental?.componentLevelTreeShaking) {
+					if (!buildPhase) {
+						buildPhase = 'tree-shake-traverser';
+						const bundle = await rollup({
+							...rollupOptions,
+							cache: false,
+							output: []
+						});
+						await bundle.close();
+					}
+				} else {
+					buildPhase = 'main';
+				}
+
 				if (!options.prebundleSvelteLibraries) return;
 				const isSvelteMetadataChanged = await saveSvelteMetadata(viteConfig.cacheDir, options);
 				if (isSvelteMetadataChanged) {
@@ -94,6 +121,9 @@ export function svelte(inlineOptions) {
 				const ssr = !!opts?.ssr;
 				const svelteRequest = requestParser(id, !!ssr);
 				if (svelteRequest) {
+					if (buildPhase === 'tree-shake-traverser') {
+						svelteFileIds.push(id);
+					}
 					const { filename, query, raw } = svelteRequest;
 					if (raw) {
 						const code = await loadRaw(svelteRequest, compileSvelte, options);
@@ -140,12 +170,35 @@ export function svelte(inlineOptions) {
 			async transform(code, id, opts) {
 				const ssr = !!opts?.ssr;
 				const svelteRequest = requestParser(id, ssr);
+
 				if (!svelteRequest || svelteRequest.query.type === 'style' || svelteRequest.raw) {
 					return;
 				}
+
 				let compileData;
 				try {
-					compileData = await compileSvelte(svelteRequest, code, options);
+					if (buildPhase === 'tree-shake-traverser') {
+						const { componentUsage } = await treeShakePreprocess(
+							svelteRequest,
+							code,
+							id,
+							options,
+							this.resolve
+						);
+
+						for (const [componentId, props] of Object.entries(componentUsage)) {
+							propsByComponentId[componentId] ??= [];
+							propsByComponentId[componentId].push(...props);
+						}
+					}
+
+					compileData = await compileSvelte(
+						svelteRequest,
+						code,
+						options,
+						id,
+						propsByComponentId[id] ?? []
+					);
 				} catch (e) {
 					cache.setError(svelteRequest, e);
 					throw toRollupError(e, options);
@@ -184,10 +237,13 @@ export function svelte(inlineOptions) {
 			},
 			async buildEnd() {
 				await options.stats?.finishAll();
+				if (buildPhase === 'tree-shake-traverser') {
+					buildPhase = 'main';
+				}
 			}
 		},
 		{
-			name: 'vite-plugin-svelte-module',
+			name: constants.PLUGIN_NAME_VPS_MODULE,
 			enforce: 'post',
 			async configResolved() {
 				moduleRequestParser = buildModuleIdParser(options);
@@ -208,6 +264,25 @@ export function svelte(inlineOptions) {
 					return compileResult.js;
 				} catch (e) {
 					throw toRollupError(e, options);
+				}
+			}
+		},
+		{
+			name: constants.PLUGIN_NAME_VPS_TRAVERSER,
+			enforce: 'post',
+			async moduleParsed(moduleInfo) {
+				if (buildPhase !== 'tree-shake-traverser') return;
+
+				// If a Svelte file is imported from a JS file, we recognize the props as dynamic.
+				// This is because importing a Svelte file from a JS file usually indicates the user wants to perform a complex operation.
+				// TODO: Handle main.js
+				if (!svelteFileIds.includes(moduleInfo.id)) {
+					for (const importId of moduleInfo.importedIds) {
+						if (svelteFileIds.includes(importId)) {
+							propsByComponentId[moduleInfo.id] ??= [];
+							propsByComponentId[moduleInfo.id].push(DYNAMIC);
+						}
+					}
 				}
 			}
 		},
