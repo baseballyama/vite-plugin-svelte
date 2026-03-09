@@ -1,6 +1,6 @@
 import { toRollupError } from '../utils/error.js';
 import { mapToRelative } from '../utils/sourcemaps.js';
-import * as svelte from 'svelte/compiler';
+import * as svelte from '@rsvelte/compiler';
 import { log } from '../utils/log.js';
 import { arraify } from '../utils/options.js';
 import fs from 'node:fs';
@@ -94,7 +94,7 @@ export function preprocess(api) {
  * @returns {import('../types/compile.d.ts').PreprocessSvelte}
  */
 function createPreprocessSvelte(options, resolvedConfig) {
-	/** @type {Array<import('svelte/compiler').PreprocessorGroup>} */
+	/** @type {Array<import('@rsvelte/compiler').PreprocessorGroup>} */
 	const preprocessors = arraify(options.preprocess);
 
 	for (const preprocessor of preprocessors) {

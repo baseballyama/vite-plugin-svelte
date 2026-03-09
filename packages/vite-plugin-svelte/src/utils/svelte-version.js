@@ -1,4 +1,4 @@
-import { VERSION } from 'svelte/compiler';
+import { VERSION } from '@rsvelte/compiler';
 
 /**
  * @type {boolean}

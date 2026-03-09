@@ -137,19 +137,19 @@ export const log = {
 
 /**
  * @param {import('../types/id.d.ts').SvelteRequest | import('../types/id.d.ts').SvelteModuleRequest} svelteRequest
- * @param {import('svelte/compiler').Warning[]} warnings
+ * @param {import('@rsvelte/compiler').Warning[]} warnings
  * @param {import('../types/options.d.ts').ResolvedOptions} options
  */
 export function logCompilerWarnings(svelteRequest, warnings, options) {
 	const { emitCss, onwarn, isBuild } = options;
 	const sendViaWS = !isBuild && options.experimental?.sendWarningsToBrowser;
 	let warn = isBuild ? warnBuild : warnDev;
-	/** @type {import('svelte/compiler').Warning[]} */
+	/** @type {import('@rsvelte/compiler').Warning[]} */
 	const handledByDefaultWarn = [];
 	const allWarnings = warnings?.filter((w) => !ignoreCompilerWarning(w, isBuild, emitCss));
 	if (sendViaWS) {
 		const _warn = warn;
-		/** @type {(w: import('svelte/compiler').Warning) => void} */
+		/** @type {(w: import('@rsvelte/compiler').Warning) => void} */
 		warn = (w) => {
 			handledByDefaultWarn.push(w);
 			_warn(w);
@@ -179,7 +179,7 @@ export function logCompilerWarnings(svelteRequest, warnings, options) {
 }
 
 /**
- * @param {import('svelte/compiler').Warning} warning
+ * @param {import('@rsvelte/compiler').Warning} warning
  * @param {boolean} isBuild
  * @param {boolean} [emitCss]
  * @returns {boolean}
@@ -193,7 +193,7 @@ function ignoreCompilerWarning(warning, isBuild, emitCss) {
 
 /**
  *
- * @param {import('svelte/compiler').Warning} warning
+ * @param {import('@rsvelte/compiler').Warning} warning
  * @returns {boolean}
  */
 function isNoScopableElementWarning(warning) {
@@ -202,7 +202,7 @@ function isNoScopableElementWarning(warning) {
 }
 
 /**
- * @param {import('svelte/compiler').Warning} w
+ * @param {import('@rsvelte/compiler').Warning} w
  */
 function warnDev(w) {
 	if (w.filename?.includes('node_modules')) {
@@ -215,7 +215,7 @@ function warnDev(w) {
 }
 
 /**
- * @param {import('svelte/compiler').Warning & {frame?: string}} w
+ * @param {import('@rsvelte/compiler').Warning & {frame?: string}} w
  */
 function warnBuild(w) {
 	if (w.filename?.includes('node_modules')) {
@@ -228,7 +228,7 @@ function warnBuild(w) {
 }
 
 /**
- * @param {import('svelte/compiler').Warning} w
+ * @param {import('@rsvelte/compiler').Warning} w
  */
 export function buildExtendedLogMessage(w) {
 	const parts = [];

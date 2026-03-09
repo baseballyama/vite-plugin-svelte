@@ -1,4 +1,4 @@
-import * as svelte from 'svelte/compiler';
+import * as svelte from '@rsvelte/compiler';
 import { safeBase64Hash } from './hash.js';
 import { log } from './log.js';
 
@@ -21,7 +21,7 @@ export function createCompileSvelte() {
 	return async function compileSvelte(svelteRequest, code, options, sourcemap) {
 		const { filename, normalizedFilename, cssId, ssr, raw } = svelteRequest;
 		const { emitCss = true } = options;
-		/** @type {import('svelte/compiler').Warning[]} */
+		/** @type {import('@rsvelte/compiler').Warning[]} */
 		const warnings = [];
 
 		if (options.stats) {
@@ -49,7 +49,7 @@ export function createCompileSvelte() {
 			}
 		}
 
-		/** @type {import('svelte/compiler').CompileOptions} */
+		/** @type {import('@rsvelte/compiler').CompileOptions} */
 		const compileOptions = {
 			...options.compilerOptions,
 			filename,
@@ -90,7 +90,7 @@ export function createCompileSvelte() {
 			finalCompileOptions.sourcemap = sourcemap;
 		}
 		const endStat = stats?.start(filename);
-		/** @type {import('svelte/compiler').CompileResult} */
+		/** @type {import('@rsvelte/compiler').CompileResult} */
 		let compiled;
 		try {
 			compiled = svelte.compile(finalCode, { ...finalCompileOptions, filename });

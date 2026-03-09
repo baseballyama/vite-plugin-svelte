@@ -5,14 +5,14 @@ import { LINK_TRANSFORM_WITH_PLUGIN } from './constants.js';
  * @param {import('../types/options.d.ts').ResolvedOptions} options
  * @param {import('vite').ResolvedConfig} config
  * @returns {{
- * 	prependPreprocessors: import('svelte/compiler').PreprocessorGroup[],
- * 	appendPreprocessors: import('svelte/compiler').PreprocessorGroup[]
+ * 	prependPreprocessors: import('@rsvelte/compiler').PreprocessorGroup[],
+ * 	appendPreprocessors: import('@rsvelte/compiler').PreprocessorGroup[]
  * }}
  */
 function buildExtraPreprocessors(options, config) {
-	/** @type {import('svelte/compiler').PreprocessorGroup[]} */
+	/** @type {import('@rsvelte/compiler').PreprocessorGroup[]} */
 	const prependPreprocessors = [];
-	/** @type {import('svelte/compiler').PreprocessorGroup[]} */
+	/** @type {import('@rsvelte/compiler').PreprocessorGroup[]} */
 	const appendPreprocessors = [];
 
 	/** @type {import('vite').Plugin[]} */

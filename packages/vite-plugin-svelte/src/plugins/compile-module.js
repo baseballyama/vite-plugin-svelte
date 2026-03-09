@@ -1,5 +1,5 @@
 import { buildModuleIdFilter, buildModuleIdParser } from '../utils/id.js';
-import * as svelteCompiler from 'svelte/compiler';
+import * as svelteCompiler from '@rsvelte/compiler';
 import { log, logCompilerWarnings } from '../utils/log.js';
 import { toRollupError } from '../utils/error.js';
 import { isSvelteWithAsync } from '../utils/svelte-version.js';
@@ -19,7 +19,7 @@ export function compileModule(api) {
 	let idParser;
 
 	/**
-	 * @type {import('svelte/compiler').ModuleCompileOptions}
+	 * @type {import('@rsvelte/compiler').ModuleCompileOptions}
 	 */
 	let staticModuleCompileOptions;
 
@@ -42,7 +42,7 @@ export function compileModule(api) {
 					return;
 				}
 				const filename = moduleRequest.filename;
-				/** @type {import('svelte/compiler').CompileOptions} */
+				/** @type {import('@rsvelte/compiler').CompileOptions} */
 				const compileOptions = {
 					...staticModuleCompileOptions,
 					dev: !this.environment.config.isProduction,
@@ -96,11 +96,11 @@ export function compileModule(api) {
 
 /**
  *
- * @param {import('svelte/compiler').CompileOptions} compilerOptions
- * @return {import('svelte/compiler').ModuleCompileOptions}
+ * @param {import('@rsvelte/compiler').CompileOptions} compilerOptions
+ * @return {import('@rsvelte/compiler').ModuleCompileOptions}
  */
 function filterNonModuleCompilerOptions(compilerOptions) {
-	/** @type {Array<keyof import('svelte/compiler').ModuleCompileOptions>} */
+	/** @type {Array<keyof import('@rsvelte/compiler').ModuleCompileOptions>} */
 	const knownModuleCompileOptionNames = ['dev', 'generate', 'filename', 'rootDir', 'warningFilter'];
 	if (isSvelteWithAsync) {
 		knownModuleCompileOptionNames.push('experimental');
@@ -108,7 +108,7 @@ function filterNonModuleCompilerOptions(compilerOptions) {
 	// not typed but this is temporary until svelte itself ignores CompileOptions passed to compileModule
 	const experimentalModuleCompilerOptionNames = ['async'];
 
-	/** @type {import('svelte/compiler').ModuleCompileOptions} */
+	/** @type {import('@rsvelte/compiler').ModuleCompileOptions} */
 	const filtered = filterByPropNames(compilerOptions, knownModuleCompileOptionNames);
 	if (filtered.experimental) {
 		filtered.experimental = filterByPropNames(

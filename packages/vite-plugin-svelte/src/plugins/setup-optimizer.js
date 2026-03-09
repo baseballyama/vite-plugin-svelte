@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
-import * as svelte from 'svelte/compiler';
+import * as svelte from '@rsvelte/compiler';
 import { log } from '../utils/log.js';
 import { toESBuildError, toRollupError } from '../utils/error.js';
 import { safeBase64Hash } from '../utils/hash.js';
@@ -190,7 +190,7 @@ async function compileSvelte(options, { filename, code }, statsCollection) {
 		// TODO ideally we'd be able to externalize prebundled styles too, but for now always put them in the js
 		css = 'injected';
 	}
-	/** @type {import('svelte/compiler').CompileOptions} */
+	/** @type {import('@rsvelte/compiler').CompileOptions} */
 	const compileOptions = {
 		dev: true, // default to dev: true because prebundling is only used in dev
 		...options.compilerOptions,
