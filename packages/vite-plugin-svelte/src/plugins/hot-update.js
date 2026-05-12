@@ -1,6 +1,7 @@
 import { log } from '../utils/log.js';
 import { setupWatchers } from '../utils/watch.js';
 import { SVELTE_VIRTUAL_STYLE_ID_REGEX } from '../utils/constants.js';
+import * as svelte from '@rsvelte/compiler';
 
 /**
  * @param {import('../types/plugin-api.d.ts').PluginAPI} api
@@ -21,6 +22,16 @@ export function hotUpdate(api) {
 	 * @type {Map<string|null,string>}
 	 */
 	const transformResultCache = new Map();
+
+	/**
+	 * Cache of the previous `.svelte` source per file, keyed by absolute
+	 * filename. Used together with `@rsvelte/compiler`'s `hmrDiff` to
+	 * short-circuit hot updates when the source on disk is byte-identical
+	 * to the previous version (mtime touched but content unchanged).
+	 *
+	 * @type {Map<string,string>}
+	 */
+	const prevSrcCache = new Map();
 
 	/** @type {import('vite').Plugin} */
 	const plugin = {
@@ -67,6 +78,7 @@ export function hotUpdate(api) {
 
 		buildStart() {
 			transformResultCache.clear();
+			prevSrcCache.clear();
 		},
 
 		transform: {
@@ -80,6 +92,33 @@ export function hotUpdate(api) {
 			async handler(ctx) {
 				const svelteRequest = idParser(ctx.file, false, ctx.timestamp);
 				if (svelteRequest) {
+					// Fast path: compare the new `.svelte` source against the
+					// cached previous version. When the source is byte-identical
+					// (mtime changed but content didn't), skip the entire
+					// transform-and-compare pipeline below.
+					if (typeof svelte.hmrDiff === 'function') {
+						let nextSrc;
+						try {
+							nextSrc = await ctx.read();
+						} catch {
+							nextSrc = undefined;
+						}
+						if (typeof nextSrc === 'string') {
+							const prevSrc = prevSrcCache.get(svelteRequest.filename);
+							prevSrcCache.set(svelteRequest.filename, nextSrc);
+							if (prevSrc != null) {
+								const diff = svelte.hmrDiff(prevSrc, nextSrc);
+								if (diff && diff.change === 'unchanged') {
+									log.debug(
+										`skipping hot update for ${svelteRequest.id} because svelte source is byte-identical to previous version`,
+										undefined,
+										'hmr'
+									);
+									return [];
+								}
+							}
+						}
+					}
 					const { modules } = ctx;
 					const svelteModules = [];
 					const nonSvelteModules = [];
