@@ -1,4 +1,4 @@
-import { VERSION } from '@rsvelte/compiler';
+import { VERSION } from '@rsvelte/vite-plugin-svelte-native';
 
 /**
  * @type {boolean}

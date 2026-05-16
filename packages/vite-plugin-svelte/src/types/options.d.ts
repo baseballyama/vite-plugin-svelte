@@ -1,4 +1,4 @@
-import type { CompileOptions } from '@rsvelte/compiler';
+import type { CompileOptions } from '@rsvelte/vite-plugin-svelte-native';
 import type { ViteDevServer } from 'vite';
 // eslint-disable-next-line n/no-missing-import
 import { VitePluginSvelteStats } from '../utils/vite-plugin-svelte-stats.js';
