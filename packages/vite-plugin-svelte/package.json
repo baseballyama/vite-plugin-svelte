@@ -39,7 +39,7 @@
   },
   "homepage": "https://github.com/baseballyama/vite-plugin-svelte#readme",
   "dependencies": {
-    "@rsvelte/compiler": ">=0.1.0",
+    "@rsvelte/vite-plugin-svelte-native": ">=0.1.0",
     "@sveltejs/vite-plugin-svelte-inspector": "^5.0.0",
     "deepmerge": "^4.3.1",
     "magic-string": "^0.30.21",

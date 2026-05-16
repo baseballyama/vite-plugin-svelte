@@ -1,4 +1,4 @@
-import type { Warning } from '@rsvelte/compiler';
+import type { Warning } from '@rsvelte/vite-plugin-svelte-native';
 
 export interface LogFn extends SimpleLogFn {
 	(message: string, payload?: unknown, namespace?: string): void;

@@ -1,4 +1,4 @@
-import type { Processed, CompileResult } from '@rsvelte/compiler';
+import type { Processed, CompileResult } from '@rsvelte/vite-plugin-svelte-native';
 import type { SvelteRequest } from './id.d.ts';
 import type { ResolvedOptions } from './options.d.ts';
 import type { CustomPluginOptionsVite, Rollup } from 'vite';
