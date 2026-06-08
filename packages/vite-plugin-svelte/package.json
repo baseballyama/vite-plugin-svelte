@@ -1,6 +1,6 @@
 {
   "name": "@rsvelte/vite-plugin-svelte",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "MIT",
   "author": "dominikg",
   "files": [
@@ -49,7 +49,7 @@
   },
   "peerDependencies": {
     "svelte": "^5.0.0",
-    "vite": "^6.3.0 || ^7.0.0"
+    "vite": "^6.3.0 || ^7.0.0 || ^8.0.0"
   },
   "devDependencies": {
     "@types/debug": "^4.1.12",

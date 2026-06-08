@@ -22,9 +22,11 @@ const { version: viteVersion, rolldownVersion } = vite;
  * @returns {import('vite').Plugin}
  */
 export function configure(api, inlineOptions) {
-	if (rolldownVersion) {
+	// Stable vite 8 is supported; only warn for pre-release (beta/rc) builds,
+	// whose version string carries a `-` suffix (e.g. `8.0.0-beta.7`).
+	if (rolldownVersion && viteVersion.includes('-')) {
 		log.warn.once(
-			`!!! Support for vite 8 beta in vite-plugin-svelte is experimental (rolldown: ${rolldownVersion}, vite: ${viteVersion}) !!!
+			`!!! Support for vite 8 pre-releases in vite-plugin-svelte is experimental (rolldown: ${rolldownVersion}, vite: ${viteVersion}) !!!
 			See https://github.com/sveltejs/vite-plugin-svelte/issues/1143 for a list of known issues and to report feedback.`.replace(
 				/\t+/g,
 				'\t'
