@@ -1,23 +1,10 @@
-import process from 'node:process';
 import { describe, it, expect } from 'vitest';
+import * as svelte from 'svelte/compiler';
 import { createCompileSvelte } from '../src/utils/compile.js';
-/** @type {import('../../types/options.d.ts').ResolvedOptions} */
-const options = {
-	compilerOptions: {
-		dev: false,
-		format: 'esm',
-		css: 'external'
-	},
-	isBuild: false,
-	isDebug: false,
-	isProduction: false,
-	isServe: false,
-	root: process.cwd()
-};
 
 describe('createCompileSvelte', () => {
 	it('returns function', () => {
-		const compileSvelte = createCompileSvelte(options);
+		const compileSvelte = createCompileSvelte(svelte);
 		expect(typeof compileSvelte).toBe('function');
 	});
 
@@ -29,7 +16,7 @@ describe('createCompileSvelte', () => {
         console.log('something else');
         </script>
 				<div>{x}</div>`;
-			const compileSvelte = createCompileSvelte(options);
+			const compileSvelte = createCompileSvelte(svelte);
 			const output = await compileSvelte(
 				{
 					cssId: 'svelte-xxxxx',
@@ -59,7 +46,7 @@ describe('createCompileSvelte', () => {
 			</script>
 			<div>{x}</div>`;
 
-			const compileSvelte = createCompileSvelte(options);
+			const compileSvelte = createCompileSvelte(svelte);
 			const output = await compileSvelte(
 				{
 					cssId: 'svelte-xxxxx',

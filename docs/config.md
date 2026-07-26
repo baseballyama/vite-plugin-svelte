@@ -254,6 +254,57 @@ A [picomatch pattern](https://github.com/micromatch/picomatch), or array of patt
   });
   ```
 
+### compiler
+
+- **Type:** `Compiler | string`
+- **Default:** `'svelte/compiler'`
+
+  Use an alternative compiler implementation instead of `svelte/compiler`. This allows swapping in drop-in replacements — for example [rsvelte](https://github.com/baseballyama/rsvelte), a Rust port of the Svelte compiler — wrappers that add instrumentation, or mocks in tests.
+
+  Pass either the compiler module itself or a module specifier that is resolved from the Vite root and imported. The module must provide `compile`, `compileModule`, `preprocess` and `VERSION` compatible with `svelte/compiler`.
+
+  A warning is logged if the `VERSION` reported by the compiler does not match the version of the installed `svelte` package, because the compiled output has to match the Svelte runtime.
+
+  A module specifier may fail to resolve for ESM-only packages in some setups. If that happens, import the module yourself and pass it directly instead of a specifier.
+
+  **Example:**
+
+  ```js
+  // vite.config.js
+  import * as rsvelte from '@rsvelte/compiler';
+
+  export default defineConfig({
+    plugins: [
+      svelte({
+        compiler: rsvelte
+      })
+    ]
+  });
+  ```
+
+  ```js
+  // vite.config.js
+  export default defineConfig({
+    plugins: [
+      svelte({
+        // resolved from the Vite root, a relative path like './my-compiler.js' works too
+        compiler: '@rsvelte/compiler'
+      })
+    ]
+  });
+  ```
+
+  In SvelteKit, set it in `svelte.config.js` instead:
+
+  ```js
+  // svelte.config.js
+  export default {
+    vitePlugin: {
+      compiler: '@rsvelte/compiler'
+    }
+  };
+  ```
+
 ## Experimental options
 
 These options are considered experimental and breaking changes to them can occur in any release! Specify them under the `experimental` option.

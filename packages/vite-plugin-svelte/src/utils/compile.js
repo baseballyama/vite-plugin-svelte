@@ -1,8 +1,8 @@
+/** @import { Compiler } from '../public.js' */
 /** @import { CompileSvelte } from '../types/compile.js' */
 /** @import { StatCollection } from '../types/vite-plugin-svelte-stats.js' */
 /** @import { CompileOptions, CompileResult, Warning } from 'svelte/compiler' */
 
-import * as svelte from 'svelte/compiler';
 import { log } from './log.js';
 
 import { mapToRelative } from './sourcemaps.js';
@@ -15,9 +15,10 @@ const scriptLangRE =
 	/<!--[^]*?-->|<script\s+(?:[^>]*|(?:[^=>'"/]+=(?:"[^"]*"|'[^']*'|[^>\s]+)\s+)*)lang=(["'])?([^"' >]+)\1[^>]*>/g;
 
 /**
+ * @param {Compiler} compiler
  * @returns {CompileSvelte}
  */
-export function createCompileSvelte() {
+export function createCompileSvelte(compiler) {
 	/** @type {StatCollection | undefined} */
 	let stats;
 	/** @type {CompileSvelte} */
@@ -94,7 +95,7 @@ export function createCompileSvelte() {
 		/** @type {CompileResult} */
 		let compiled;
 		try {
-			compiled = svelte.compile(finalCode, { ...finalCompileOptions, filename });
+			compiled = compiler.compile(finalCode, { ...finalCompileOptions, filename });
 
 			// patch output with partial accept until svelte does it
 			// TODO remove later

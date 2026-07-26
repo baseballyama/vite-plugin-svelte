@@ -37,6 +37,8 @@ import {
 } from 'vitefu';
 
 import { isCommonDepWithoutSvelteField } from './dependencies.js';
+import { resolveCompiler } from './compiler.js';
+import { SVELTE_VERSION } from './svelte-version.js';
 
 const allowedPluginOptions = new Set([
 	'include',
@@ -46,6 +48,7 @@ const allowedPluginOptions = new Set([
 	'prebundleSvelteLibraries',
 	'inspector',
 	'dynamicCompileOptions',
+	'compiler',
 	'experimental'
 ]);
 
@@ -169,6 +172,17 @@ export async function preResolveOptions(inlineOptions, viteUserConfig, viteEnv) 
 	const merged = /** @type {PreResolvedOptions} */ (
 		mergeConfigs(defaultOptions, svelteConfig, inlineOptions, extraOptions)
 	);
+	// resolve from the original option value, mergeConfigs would clone a compiler module into a plain object
+	const rawCompiler = inlineOptions.compiler ?? svelteConfig?.compiler;
+	merged.compiler = await resolveCompiler(rawCompiler, merged.root);
+	// a stable identifier for which compiler was requested, used to invalidate the prebundle
+	// cache when switching between compilers that happen to report the same VERSION
+	merged.compilerSpecifier =
+		rawCompiler == null
+			? 'svelte/compiler'
+			: typeof rawCompiler === 'string'
+				? rawCompiler
+				: 'custom';
 	// configFile of svelteConfig contains the absolute path it was loaded from,
 	// prefer it over the possibly relative inline path
 	if (svelteConfig?.configFile) {
@@ -224,9 +238,12 @@ export function resolveOptions(preResolveOptions, viteConfig) {
 	const merged = /** @type {ResolvedOptions}*/ (
 		mergeConfigs(defaultOptions, preResolveOptions, extraOptions)
 	);
+	// keep the compiler module itself, mergeConfigs would clone it into a plain object
+	merged.compiler = preResolveOptions.compiler;
 
 	removeIgnoredOptions(merged);
 	handleDeprecatedOptions(merged);
+	warnOnCompilerVersionMismatch(merged);
 	logRemovedPluginAPI(viteConfig);
 	enforceOptionsForHmr(merged, viteConfig);
 	enforceOptionsForProduction(merged);
@@ -311,6 +328,18 @@ function removeIgnoredOptions(options) {
 			// @ts-expect-error string access
 			delete options.compilerOptions[ignored];
 		});
+	}
+}
+
+/**
+ * @param {ResolvedOptions} options
+ */
+function warnOnCompilerVersionMismatch(options) {
+	const compilerVersion = options.compiler.VERSION;
+	if (compilerVersion && compilerVersion !== SVELTE_VERSION) {
+		log.warn.once(
+			`The compiler passed via the "compiler" option reports VERSION ${compilerVersion} but the installed svelte is ${SVELTE_VERSION}. This can lead to runtime errors if the compiled output does not match the svelte runtime.`
+		);
 	}
 }
 

@@ -7,7 +7,6 @@
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import * as svelte from 'svelte/compiler';
 import { log } from '../utils/log.js';
 import { toRollupError } from '../utils/error.js';
 import { SVELTE_IMPORTS } from '../utils/constants.js';
@@ -153,7 +152,7 @@ async function compileSvelte(options, { filename, code }, generate, statsCollect
 
 	if (options.preprocess) {
 		try {
-			preprocessed = await svelte.preprocess(code, options.preprocess, { filename });
+			preprocessed = await options.compiler.preprocess(code, options.preprocess, { filename });
 		} catch (e) {
 			e.message = `Error while preprocessing ${filename}${e.message ? ` - ${e.message}` : ''}`;
 			throw e;
@@ -184,7 +183,7 @@ async function compileSvelte(options, { filename, code }, generate, statsCollect
 			}
 		: compileOptions;
 	const endStat = statsCollection?.start(filename);
-	const compiled = svelte.compile(finalCode, finalCompileOptions);
+	const compiled = options.compiler.compile(finalCode, finalCompileOptions);
 	if (endStat) {
 		endStat();
 	}
@@ -203,7 +202,7 @@ async function compileSvelte(options, { filename, code }, generate, statsCollect
  */
 async function compileSvelteModule(options, { filename, code }, generate, statsCollection) {
 	const endStat = statsCollection?.start(filename);
-	const compiled = svelte.compileModule(code, {
+	const compiled = options.compiler.compileModule(code, {
 		dev: options.compilerOptions?.dev ?? true, // default to dev: true because prebundling is only used in dev
 		filename,
 		generate
@@ -266,5 +265,9 @@ function generateSvelteMetadata(options) {
 	for (const key of PREBUNDLE_SENSITIVE_OPTIONS) {
 		metadata[key] = options[key];
 	}
+	// track which compiler was requested plus its version, not the whole module (that would
+	// bloat the metadata). the specifier is included too so switching to a drop-in replacement
+	// that happens to report the same VERSION as `svelte/compiler` still invalidates the cache.
+	metadata.compiler = `${options.compilerSpecifier}@${options.compiler.VERSION}`;
 	return metadata;
 }

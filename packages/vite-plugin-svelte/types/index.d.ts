@@ -3,6 +3,16 @@ declare module '@sveltejs/vite-plugin-svelte' {
 	import type { CompileOptions, Warning, PreprocessorGroup } from 'svelte/compiler';
 	export type Options = Omit<SvelteConfig, 'vitePlugin'> & PluginOptionsInline;
 
+	/**
+	 * The subset of the `svelte/compiler` module that vite-plugin-svelte uses.
+	 *
+	 * An alternative compiler passed via the `compiler` option has to implement all of it.
+	 */
+	export type Compiler = Pick<
+		typeof import('svelte/compiler'),
+		'compile' | 'compileModule' | 'preprocess' | 'VERSION'
+	>;
+
 	interface PluginOptionsInline extends PluginOptions {
 		/**
 		 * Path to a svelte config file, either absolute or relative to Vite root
@@ -87,6 +97,26 @@ declare module '@sveltejs/vite-plugin-svelte' {
 			code: string;
 			compileOptions: Partial<CompileOptions>;
 		}) => Promise<Partial<CompileOptions> | void> | Partial<CompileOptions> | void;
+
+		/**
+		 * Use an alternative compiler implementation instead of `svelte/compiler`.
+		 *
+		 * This allows swapping in drop-in replacements like Rust ports of the Svelte compiler,
+		 * wrappers that add instrumentation, or mocks in tests.
+		 * - module object: used directly
+		 * - string: module specifier resolved from the project root and imported
+		 *
+		 * The module must provide `compile`, `compileModule`, `preprocess` and `VERSION`
+		 * compatible with `svelte/compiler`.
+		 *
+		 * @default 'svelte/compiler'
+		 * @example
+		 * ```
+		 * import * as rsvelte from '@rsvelte/compiler';
+		 * svelte({ compiler: rsvelte })
+		 * ```
+		 */
+		compiler?: Compiler | string;
 
 		/**
 		 * These options are considered experimental and breaking changes to them can occur in any release

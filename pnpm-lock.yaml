@@ -315,6 +315,18 @@ importers:
         specifier: ^8.0.9
         version: 8.1.3(@types/node@22.20.0)(sass@1.101.0)(stylus@0.64.0)(yaml@2.8.2)
 
+  packages/e2e-tests/custom-compiler:
+    devDependencies:
+      '@sveltejs/vite-plugin-svelte':
+        specifier: workspace:^
+        version: link:../../vite-plugin-svelte
+      svelte:
+        specifier: ^5.46.4
+        version: 5.56.4(@typescript-eslint/types@8.62.1)
+      vite:
+        specifier: ^8.0.9
+        version: 8.1.3(@types/node@22.20.0)(sass@1.101.0)(stylus@0.64.0)(yaml@2.8.2)
+
   packages/e2e-tests/custom-extensions:
     devDependencies:
       '@sveltejs/vite-plugin-svelte':

@@ -1,9 +1,10 @@
 import { VERSION } from 'svelte/compiler';
 
 /**
- * @type {boolean}
+ * version of the installed svelte package
+ * @type {string}
  */
-export const isSvelteWithAsync = gte(VERSION, '5.36.0');
+export const SVELTE_VERSION = VERSION;
 
 /**
  * split semver string and convert to number, ignores non digits in tag

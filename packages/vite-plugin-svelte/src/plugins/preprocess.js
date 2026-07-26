@@ -7,7 +7,6 @@
 
 import { toRollupError } from '../utils/error.js';
 import { mapToRelative } from '../utils/sourcemaps.js';
-import * as svelte from 'svelte/compiler';
 import { log } from '../utils/log.js';
 import { arraify } from '../utils/options.js';
 import fs from 'node:fs';
@@ -116,7 +115,7 @@ function createPreprocessSvelte(options, resolvedConfig) {
 		let preprocessed;
 		if (preprocessors && preprocessors.length > 0) {
 			try {
-				preprocessed = await svelte.preprocess(code, preprocessors, { filename }); // full filename here so postcss works
+				preprocessed = await options.compiler.preprocess(code, preprocessors, { filename }); // full filename here so postcss works
 			} catch (e) {
 				e.message = `Error while preprocessing ${filename}${e.message ? ` - ${e.message}` : ''}`;
 				throw e;
